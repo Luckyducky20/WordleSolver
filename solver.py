@@ -19,6 +19,7 @@ class WordleSolver:
         self.tries = []
         self.reset()
 
+    # resetting the variables
     def reset(self):
         self.__invalid_letters.clear()
         self.__candidate_words = sorted(list(self.__all_possible_words))
@@ -29,12 +30,15 @@ class WordleSolver:
         self.game_number += 1
         self.tries.clear()
 
+    # checks for letters that are not in the word
+    # returns true if any letters that are not in the word are found
     def __contains_forbidden_letters(self, word):
         for c in word:
             if c in self.__invalid_letters:
                 return True
         return False
 
+    # returns the probabilities for each character in the word
     def __get_untried_letter_probability(self, words):
         counter = Counter()
         for w in words:
@@ -43,6 +47,7 @@ class WordleSolver:
                     counter[c] += 1
         return counter
 
+    # creates a letter frequency list and returns it
     def __get_letter_freq_map(self, words):
         counter = Counter()
         for w in words:
@@ -50,28 +55,33 @@ class WordleSolver:
                 counter[c] += 1
         return counter
 
+    # checking if the green letters are in the same slots that were green for them before
     def __matches_green_constraints(self, word):
         for letter, index in self.__green_blocks:
             if word[index] != letter:
                 return False
         return True
 
+    # checking if the yellow letters are in the same slot as before or not in the word
     def __matches_yellow_constraints(self, word):
         for letter, index in self.__yellow_blocks:
             if word[index] == letter or letter not in word:
                 return False
         return True
 
+    # iterating through the word possibilities and updating what words could possibly result
+    #  in a win and ignoring the ones that don't match the green and yellow letters
     def __filter_out_invalid_words(self):
         new_candidates = []
         for word in self.__candidate_words:
-            if self.__contains_forbidden_letters(word) or not self.__matches_green_constraints(
-                    word) or not self.__matches_yellow_constraints(word):
+            if self.__contains_forbidden_letters(word) or not self.__matches_green_constraints(word) or not self.__matches_yellow_constraints(word):
                 continue
             new_candidates.append(word)
 
+        # updating the new word possinbilities
         self.__candidate_words = new_candidates
 
+    # making an educated guess for what the word could be after fine tuning our word candidates
     def __make_educated_guess(self):
         untried_letters = self.__get_untried_letter_probability(self.__candidate_words)
         freq_map = self.__get_letter_freq_map(self.__candidate_words)
@@ -83,19 +93,17 @@ class WordleSolver:
                 untried_score = sum(untried_letters[c] if c in untried_letters else 0 for c in letters)
                 freq_score = sum(freq_map[c] for c in letters)
                 word_with_score.append((word, untried_score, freq_score))
-            ranked_words = sorted(word_with_score,
-                                  key=lambda item: (-item[1], -item[2], item[0]))
+            ranked_words = sorted(word_with_score,key=lambda item: (-item[1], -item[2], item[0]))
             guess = ranked_words[0][0]
         else:
-            guess = \
-                sorted(self.__candidate_words,
-                       key=lambda word: (-len(set(word)), -sum(freq_map[c] for c in word), word))[0]
+            guess = sorted(self.__candidate_words,key=lambda word: (-len(set(word)), -sum(freq_map[c] for c in word), word))[0]
         return guess
 
+    # picking the word for next guess
     def __pick_a_word(self):
         self.__filter_out_invalid_words()
         if DEB:
-            print(f"Remaining Candidate: {len(self.__candidate_words)}")
+            print(f"Remaining Candidates: {len(self.__candidate_words)}")
 
         if len(self.__candidate_words) == 0:
             print("Game's word doesn't exist in our dictionary.")
@@ -103,14 +111,18 @@ class WordleSolver:
         elif len(self.__candidate_words) == 1:
             return self.__candidate_words[0]
 
+        # finds the best probability for a word to be winning and returns it
         return self.__make_educated_guess()
 
+    # word guesser, gets the best word to choose from pick a word and guesses it
     def solve(self, wordle):
         if DEB:
             print("=" * 20)
             print(f"Game: {self.game_number}")
             print("=" * 20)
 
+        # runs 6 attempts and guesses the best word it can find from an algorithm,
+        # then guesses until either winning or losing
         while True:
             self.attempt += 1
             guess = self.__pick_a_word()
@@ -147,7 +159,7 @@ class WordleSolver:
                 self.__candidate_words.remove(guess)
                 self.__all_possible_words.remove(guess)
 
-
+# plays a set amount of games the user specifies, if they don't specify, then the default is 1
 def play_games(count=1):
     wordle = Wordle()
     solver = WordleSolver()
@@ -159,7 +171,7 @@ def play_games(count=1):
         print()
         wordle.next_game()
 
-
+# running specified number of wordle games
 if __name__ == '__main__':
     DEB = True
     play_games(5)

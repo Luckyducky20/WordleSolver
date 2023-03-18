@@ -2,12 +2,13 @@ from wordle import AttemptVerdict, LetterVerdict, LETTER_COUNT, Wordle
 from solver import WordleSolver
 import re
 
-
+# this class is for testing
 class Rewordle(Wordle):
     def __init__(self):
         super().__init__()
         self.attempt = 0
 
+    
     def __translate_input(self, guess: str, game_verdict: str):
         if game_verdict.lower() == "invalid":
             return AttemptVerdict.INVALID_WORD, None
